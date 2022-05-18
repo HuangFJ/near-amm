@@ -35,3 +35,7 @@ near view $a_id ft_balance_of '{"account_id": "'$amm_id'"}'
 near view $b_id ft_balance_of '{"account_id": "'$amm_id'"}'
 near view $amm_id get_info
 near view $amm_id get_ratio
+
+near call $amm_id deposit_b_by_owner '{"amount":34321}' --accountId=$owner_id --gas=55000000000000
+near view $amm_id get_info
+near view $amm_id get_ratio

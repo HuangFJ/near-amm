@@ -150,6 +150,23 @@ impl Contract {
             );
     }
 
+    #[payable]
+    pub fn deposit_a_by_owner(&mut self, amount: Balance) {
+        require!(
+            env::predecessor_account_id() == self.owner_id,
+            "only support in self"
+        );
+        let a_amount = amount * 10_u128.pow(self.a_contract_decimals as u32);
+        let a_ticker_after = a_amount + self.a_ticker;
+        let b_ticker_after = self.b_ticker;
+        ext_token::ext(self.a_contract_id.clone())
+            .transfer_from(self.owner_id.clone(), env::current_account_id(), a_amount)
+            .then(
+                ext_self::ext(env::current_account_id())
+                    .callback_update_tickers(a_ticker_after, b_ticker_after),
+            );
+    }
+
     //deposit B , get A
     #[payable]
     pub fn deposit_b(&mut self, amount: Balance) {
@@ -171,6 +188,23 @@ impl Contract {
                     sender_id,
                     a_amount,
                 ),
+            );
+    }
+
+    #[payable]
+    pub fn deposit_b_by_owner(&mut self, amount: Balance) {
+        require!(
+            env::predecessor_account_id() == self.owner_id,
+            "only support in self"
+        );
+        let b_amount = amount * 10_u128.pow(self.b_contract_decimals as u32);
+        let b_ticker_after = b_amount + self.b_ticker;
+        let a_ticker_after = self.a_ticker;
+        ext_token::ext(self.b_contract_id.clone())
+            .transfer_from(self.owner_id.clone(), env::current_account_id(), b_amount)
+            .then(
+                ext_self::ext(env::current_account_id())
+                    .callback_update_tickers(a_ticker_after, b_ticker_after),
             );
     }
 
@@ -201,5 +235,6 @@ impl Contract {
         );
         self.a_ticker = a_ticker_after;
         self.b_ticker = b_ticker_after;
+        self.calc_ratio();
     }
 }
