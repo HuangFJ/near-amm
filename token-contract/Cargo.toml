@@ -1,5 +1,5 @@
 [package]
-name = "b-token"
+name = "token-contract"
 version = "0.1.0"
 authors = ["Jon Huang"]
 edition = "2021"

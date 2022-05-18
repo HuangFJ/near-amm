@@ -1,7 +1,7 @@
 use near_contract_standards::fungible_token::metadata::FungibleTokenMetadata;
 use near_sdk::{env, near_bindgen, AccountId, Gas};
 
-const TOKEN_TRANSFER_GAS: Gas=10000000;
+// const TOKEN_TRANSFER_GAS: Gas=10000000;
 
 #[near_bindgen]
 pub struct Contract{
@@ -15,7 +15,7 @@ pub struct Contract{
 #[near_bindgen]
 impl Contract {
     #[init]
-    pub fn new(owner_id: AccountId, a_id: AccountId, b_id: AccountId){
+    pub fn new(owner_id: AccountId, a_contract_id: AccountId, b_contract_id: AccountId){
         
         // requests and stores the metadata of tokens
 
