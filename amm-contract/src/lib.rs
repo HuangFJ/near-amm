@@ -77,8 +77,7 @@ impl Contract {
         this
     }
 
-    #[allow(unused)]
-    fn callback_get_info(&mut self, contract_id: AccountId, #[callback] val: (String, u8)) {
+    pub fn callback_get_info(&mut self, contract_id: AccountId, #[callback] val: (String, u8)) {
         require!(env::predecessor_account_id()==env::current_account_id(), "only support in self");
         log!("Fill additional info for {}", val.0);
         if contract_id == self.a_contract_id {
@@ -126,9 +125,10 @@ impl Contract {
 
     //deposit A , get B
     #[payable]
-    pub fn deposit_a(&mut self, a_amount: Balance) {
+    pub fn deposit_a(&mut self, amount: Balance) {
         let sender_id = env::predecessor_account_id();
-        let a_ticker_after = a_amount * 10_u128.pow(self.a_contract_decimals as u32) + self.a_ticker;
+        let a_amount = amount * 10_u128.pow(self.a_contract_decimals as u32);
+        let a_ticker_after = a_amount + self.a_ticker;
         let b_ticker_after = self.ratio / a_ticker_after;
         let b_amount = self.b_ticker - b_ticker_after;
         let next_contract = self.b_contract_id.clone();
@@ -147,9 +147,10 @@ impl Contract {
 
     //deposit B , get A
     #[payable]
-    pub fn deposit_b(&mut self, b_amount: Balance) {
+    pub fn deposit_b(&mut self, amount: Balance) {
         let sender_id = env::predecessor_account_id();
-        let b_ticker_after = b_amount * 10_u128.pow(self.b_contract_decimals as u32) + self.b_ticker;
+        let b_amount = amount * 10_u128.pow(self.b_contract_decimals as u32);
+        let b_ticker_after = b_amount + self.b_ticker;
         let a_ticker_after = self.ratio / b_ticker_after;
         let a_amount = self.a_ticker - a_ticker_after;
         let next_contract = self.a_contract_id.clone();
@@ -166,8 +167,7 @@ impl Contract {
             );
     }
 
-    #[allow(unused)]
-    fn callback_ft_deposit(
+    pub fn callback_ft_deposit(
         &mut self,
         a_ticker_after: Balance,
         b_ticker_after: Balance,
@@ -184,8 +184,7 @@ impl Contract {
             );
     }
 
-    #[allow(unused)]
-    fn callback_update_tickers(&mut self, a_ticker_after: Balance, b_ticker_after: Balance) {
+    pub fn callback_update_tickers(&mut self, a_ticker_after: Balance, b_ticker_after: Balance) {
         require!(env::predecessor_account_id()==env::current_account_id(), "only support in self");
         self.a_ticker = a_ticker_after;
         self.b_ticker = b_ticker_after;
