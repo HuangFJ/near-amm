@@ -24,9 +24,9 @@ near view $amm_id get_info
 near view $amm_id get_ratio
 
 
-near call $a_id storage_deposit '{"account_id": "'$sim_id'"}'
+near call $a_id storage_deposit '{"account_id": "'$sim_id'"}' --accountId=$owner_id --deposit=1
 #1000
-near call $a_id ft_transfer '{"receiver_id": "'$sim_id'","amount":1000000000000000000000}' --accountId=$owner_id
+near call $a_id ft_transfer '{"receiver_id": "'$sim_id'","amount":"1000000000000000000000"}' --accountId=$owner_id --deposit=0.000000000000000000000001
 near view $a_id ft_balance_of '{"account_id": "'$sim_id'"}'
 near call $amm_id deposit_a '{"amount":111}' --accountId=$sim_id --gas=55000000000000
 near view $a_id ft_balance_of '{"account_id": "'$sim_id'"}'

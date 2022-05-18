@@ -78,7 +78,10 @@ impl Contract {
     }
 
     pub fn callback_get_info(&mut self, contract_id: AccountId, #[callback] val: (String, u8)) {
-        require!(env::predecessor_account_id()==env::current_account_id(), "only support in self");
+        require!(
+            env::predecessor_account_id() == env::current_account_id(),
+            "only support in self"
+        );
         log!("Fill additional info for {}", val.0);
         if contract_id == self.a_contract_id {
             self.a_contract_name = val.0;
@@ -129,7 +132,9 @@ impl Contract {
         let sender_id = env::predecessor_account_id();
         let a_amount = amount * 10_u128.pow(self.a_contract_decimals as u32);
         let a_ticker_after = a_amount + self.a_ticker;
-        let b_ticker_after = self.ratio / a_ticker_after;
+        let b_ticker_after = self.ratio
+            / (a_ticker_after / 10_u128.pow(self.a_contract_decimals as u32))
+            * 10_u128.pow(self.b_contract_decimals as u32);
         let b_amount = self.b_ticker - b_ticker_after;
         let next_contract = self.b_contract_id.clone();
         ext_token::ext(self.a_contract_id.clone())
@@ -151,7 +156,9 @@ impl Contract {
         let sender_id = env::predecessor_account_id();
         let b_amount = amount * 10_u128.pow(self.b_contract_decimals as u32);
         let b_ticker_after = b_amount + self.b_ticker;
-        let a_ticker_after = self.ratio / b_ticker_after;
+        let a_ticker_after = self.ratio
+            / (b_ticker_after / 10_u128.pow(self.b_contract_decimals as u32))
+            * 10_u128.pow(self.a_contract_decimals as u32);
         let a_amount = self.a_ticker - a_ticker_after;
         let next_contract = self.a_contract_id.clone();
         ext_token::ext(self.b_contract_id.clone())
@@ -175,7 +182,10 @@ impl Contract {
         receiver_id: AccountId,
         amount: Balance,
     ) {
-        require!(env::predecessor_account_id()==env::current_account_id(), "only support in self");
+        require!(
+            env::predecessor_account_id() == env::current_account_id(),
+            "only support in self"
+        );
         ext_token::ext(contract_id)
             .transfer_from(env::current_account_id(), receiver_id, amount)
             .then(
@@ -185,9 +195,11 @@ impl Contract {
     }
 
     pub fn callback_update_tickers(&mut self, a_ticker_after: Balance, b_ticker_after: Balance) {
-        require!(env::predecessor_account_id()==env::current_account_id(), "only support in self");
+        require!(
+            env::predecessor_account_id() == env::current_account_id(),
+            "only support in self"
+        );
         self.a_ticker = a_ticker_after;
         self.b_ticker = b_ticker_after;
     }
-
 }
