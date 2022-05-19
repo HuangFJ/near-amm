@@ -1,10 +1,6 @@
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
 use near_sdk::{env, ext_contract, log, near_bindgen, require, AccountId, Balance, PanicOnDefault};
 
-// const GAS_FOR_TOKEN_TRANSFER: Gas = Gas(7_500_000_000_000);
-// const BASE_GAS: Gas = Gas(20_000_000_000_000);
-// const NO_GAS: Gas = Gas(0);
-// const NO_DEPOSIT: u128 = 0;
 const A_TICKER: u128 = 40000000000000000000000;
 const B_TICKER: u128 = 300000000000000000000;
 
@@ -48,6 +44,10 @@ pub struct Contract {
 
 #[near_bindgen]
 impl Contract {
+    /// Initialization method:
+    /// Input are the address of the contract owner and the addresses of two tokens (hereinafter token A and token B).
+    /// requests and stores the metadata of tokens (name, decimals) and
+    /// Creates wallets for tokens А & В.
     #[init]
     pub fn new(owner_id: AccountId, a_contract_id: AccountId, b_contract_id: AccountId) -> Self {
         require!(!env::state_exists(), "The contract has been initialized");
@@ -64,14 +64,14 @@ impl Contract {
             b_contract_name: "".into(),
             b_contract_decimals: 1,
         };
-        //call A contract to get it's name and decimals
+        // The method requests and stores the metadata of tokens (name, decimals)
         ext_token::ext(this.a_contract_id.clone()).get_info().then(
             ext_self::ext(env::current_account_id()).callback_get_info(this.a_contract_id.clone()),
         );
         ext_token::ext(this.b_contract_id.clone()).get_info().then(
             ext_self::ext(env::current_account_id()).callback_get_info(this.b_contract_id.clone()),
         );
-        //register this contract
+        // Creates wallets for tokens А & В.
         ext_token::ext(this.a_contract_id.clone()).register_amm(owner_id.clone(), this.a_ticker);
         ext_token::ext(this.b_contract_id.clone()).register_amm(owner_id, this.b_ticker);
         this
@@ -126,7 +126,10 @@ impl Contract {
         self.ratio = a_num * b_num;
     }
 
-    //deposit A , get B
+    /// The user can transfer a certain number of tokens A to the contract account and 
+    /// in return must receive a certain number of tokens B (similarly in the other direction).
+    /// The contract supports a certain ratio of tokens A and B. X * Y = K 
+    /// K is some constant value, X and Y are the number of tokens A and B respectively.
     #[payable]
     pub fn deposit_a(&mut self, amount: Balance) {
         let sender_id = env::predecessor_account_id();
@@ -150,11 +153,13 @@ impl Contract {
             );
     }
 
+    /// The owner of the contract can transfer a certain amount of tokens A or B to the contract account, 
+    /// thereby changing the ratio K.
     #[payable]
     pub fn deposit_a_by_owner(&mut self, amount: Balance) {
         require!(
             env::predecessor_account_id() == self.owner_id,
-            "only support in self"
+            "only support to call by itself"
         );
         let a_amount = amount * 10_u128.pow(self.a_contract_decimals as u32);
         let a_ticker_after = a_amount + self.a_ticker;
@@ -167,7 +172,7 @@ impl Contract {
             );
     }
 
-    //deposit B , get A
+    /// in the opposite direction 
     #[payable]
     pub fn deposit_b(&mut self, amount: Balance) {
         let sender_id = env::predecessor_account_id();
@@ -195,7 +200,7 @@ impl Contract {
     pub fn deposit_b_by_owner(&mut self, amount: Balance) {
         require!(
             env::predecessor_account_id() == self.owner_id,
-            "only support in self"
+            "only support to call by itself"
         );
         let b_amount = amount * 10_u128.pow(self.b_contract_decimals as u32);
         let b_ticker_after = b_amount + self.b_ticker;
@@ -218,7 +223,7 @@ impl Contract {
     ) {
         require!(
             env::predecessor_account_id() == env::current_account_id(),
-            "only support in self"
+            "only support to call by itself"
         );
         ext_token::ext(contract_id)
             .transfer_from(env::current_account_id(), receiver_id, amount)
@@ -231,7 +236,7 @@ impl Contract {
     pub fn callback_update_tickers(&mut self, a_ticker_after: Balance, b_ticker_after: Balance) {
         require!(
             env::predecessor_account_id() == env::current_account_id(),
-            "only support in self"
+            "only support to call by itself"
         );
         self.a_ticker = a_ticker_after;
         self.b_ticker = b_ticker_after;

@@ -10,7 +10,11 @@ use near_sdk::{
     PromiseOrValue,
 };
 
-
+/// a fungible token template
+/// we can deploy to multiple accounts and init with different parameters to create different tokens
+/// there is a amm_id attribute which reffers to the AMM Contract
+/// we use this attribute to authorize and verify transfer_from method 
+/// this is not a proper way when using in production
 #[near_bindgen]
 #[derive(BorshSerialize, BorshDeserialize, PanicOnDefault)]
 pub struct Contract {
@@ -69,7 +73,7 @@ impl Contract {
 
     #[payable]
     pub fn transfer_from(&mut self, sender_id: AccountId, receiver_id: AccountId, amount: Balance) {
-        // allow contracts to transfer tokens on your behalf
+        // allow amm contracts to transfer tokens on their behalf
         // TODO need account to approve the contracts.
         require!(
             Some(env::predecessor_account_id()) == self.amm_id,
