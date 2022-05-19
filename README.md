@@ -1,5 +1,6 @@
 ## Abstract
-This a NEAR Smart Contract case named hello-near. Please notice that it's not ready for production.In this case we will create three simple NEAR contracts: A fungible token contract, B fungible token contract and AMM like contract.The user can transfer a number of tokens A to the AMM contract and in return receive a certain number of tokens B (similarly in the other direction).The contract supports a certain ratio of tokens A and B. X * Y = K (K is some constant value, X and Y are the number of tokens A and B respectively)
+This a NEAR Smart Contract case named hello-near. Please notice that it's not ready for production.In this case we will create three simple NEAR contracts: A fungible token contract, B fungible token contract and AMM like contract.
+The user can transfer a number of tokens A to the AMM contract and in return receive a certain number of tokens B (similarly in the other direction).The contract supports a certain ratio of tokens A and B. X * Y = K (K is some constant value, X and Y are the number of tokens A and B respectively)
 
 ## Create Accounts
 NEAR is very different from Ethereum. It use Account system instead of the public key. One can own multiple accounts.The Account is like domain thing. You can create a top account which called `Master Account`, and then create multiple subaccounts under it.Because each NEAR account can only hold 1 smart contract. So in order to organize multiple contracts we can create "subaccounts" whose "master account" is user account.
@@ -29,7 +30,7 @@ near call $a_id new '{"owner_id":"'$owner_id'", "name":"A Token Contract", "symb
 near call $b_id new '{"owner_id":"'$owner_id'", "name":"B Token Contract", "symbol":"B", "total_supply":20000000000000, "decimals": 15}' --accountId=$owner_id
 near call $amm_id new '{"owner_id":"'$owner_id'", "a_contract_id":"'$a_id'", "b_contract_id":"'$b_id'"}' --accountId=$owner_id --gas=55000000000000
 ```
-After deploying contracts, we use `near call` command to initialize them. Now we have all of three contracts live on the NEAR blockchain. A token contract has a total supply of 1,000,000,000,000 with decimals 18 which means $1,000,000,000,000 * 10^18$ minimum unit. B token contract has a total supply of 20,000,000,000,000 with decimals 15 which means $20,000,000,000,000 * 10^15$ minimum unit. Looking into the source code:
+After deploying contracts, we use `near call` command to initialize them. Now we have all of three contracts live on the NEAR blockchain. A token contract has a total supply of 1,000,000,000,000 with decimals 18 which means <img src="https://render.githubusercontent.com/render/math?math=1,000,000,000,000 * 10^18"> minimum unit. B token contract has a total supply of 20,000,000,000,000 with decimals 15 which means <img src="https://render.githubusercontent.com/render/math?math=20,000,000,000,000 * 10^15"> minimum unit. Looking into the source code:
 ```rust
     pub fn new(
         owner_id: AccountId,
@@ -136,7 +137,7 @@ This is a core function of AMM contract. We send a `deposit_a` transaction to AM
             );
     }
 ``` 
-We first need to calculate the amount of B tokens before paying. $X * Y = K$ , $K$ is some constant value, $X$ and $Y$ are the number of tokens A and B respectively. When the user deposit a certain amount A say 111, the formula changes $(X + 111) * Y' = K$. $Y' = K / (X + 111)$. So we need pay $Y - Y'$ of B tokens to him. We use below command to check both balances to make sure the exchange goes correctly. 
+We first need to calculate the amount of B tokens before paying. <img src="https://render.githubusercontent.com/render/math?math=X * Y = K"> , $K$ is some constant value, $X$ and $Y$ are the number of tokens A and B respectively. When the user deposit a certain amount A say 111, the formula changes <img src="https://render.githubusercontent.com/render/math?math=(X + 111) * Y' = K">. <img src="https://render.githubusercontent.com/render/math?math=Y' = K / (X + 111)">. So we need pay <img src="https://render.githubusercontent.com/render/math?math=Y - Y'"> of B tokens to him. We use below command to check both balances to make sure the exchange goes correctly. 
 Since this is a synchronous transaction. So normally we should make rollback for all panics in there and commit while no incident occuring.
 
 ```bash
