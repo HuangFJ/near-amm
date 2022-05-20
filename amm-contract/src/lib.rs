@@ -133,10 +133,11 @@ impl Contract {
     #[payable]
     pub fn deposit_a(&mut self, amount: Balance) {
         let sender_id = env::predecessor_account_id();
-        let a_amount = amount * 10_u128.pow(self.a_contract_decimals as u32);
+        let decimal = 10_u128.pow(self.a_contract_decimals as u32);
+        let a_amount = amount * decimal;
         let a_ticker_after = a_amount + self.a_ticker;
         let b_ticker_after = self.ratio
-            / (a_ticker_after / 10_u128.pow(self.a_contract_decimals as u32))
+            / (a_ticker_after / decimal)
             * 10_u128.pow(self.b_contract_decimals as u32);
         let b_amount = self.b_ticker - b_ticker_after;
         let next_contract = self.b_contract_id.clone();
@@ -176,10 +177,11 @@ impl Contract {
     #[payable]
     pub fn deposit_b(&mut self, amount: Balance) {
         let sender_id = env::predecessor_account_id();
-        let b_amount = amount * 10_u128.pow(self.b_contract_decimals as u32);
+        let decimal = 10_u128.pow(self.b_contract_decimals as u32);
+        let b_amount = amount * decimal;
         let b_ticker_after = b_amount + self.b_ticker;
         let a_ticker_after = self.ratio
-            / (b_ticker_after / 10_u128.pow(self.b_contract_decimals as u32))
+            / (b_ticker_after / decimal)
             * 10_u128.pow(self.a_contract_decimals as u32);
         let a_amount = self.a_ticker - a_ticker_after;
         let next_contract = self.a_contract_id.clone();
