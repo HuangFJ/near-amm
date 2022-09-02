@@ -59,7 +59,7 @@ impl Contract {
     }
 
     pub fn get_info(self) -> (String, u8) {
-        (self.meta.name, self.meta.decimals)
+        (self.meta.symbol, self.meta.decimals)
     }
 
     #[payable]
