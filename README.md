@@ -19,7 +19,7 @@ near create-account $a_id --masterAccount $owner_id
 near create-account $b_id --masterAccount $owner_id
 near create-account $amm_id --masterAccount $owner_id
 ```
-We use NEAR CLI to create the accounts. First we need to login with `jonhuang.testnet`. `jonhuang.testnet` was created via NEAR wallet app https://wallet.testnet.near.org/. And then create three contract accounts `a.jonhuang.testnet`, `b.jonhuang.testnet` and `amm.jonhuang.testnet`. All of them's master key is: `jonhuang.testnet`.
+We use NEAR CLI to create the accounts. First we need to login with `jonhuang.testnet`. `jonhuang.testnet` was created via NEAR wallet app https://wallet.testnet.near.org/. And then create three contract accounts `a.jonhuang.testnet`, `b.jonhuang.testnet` and `z.jonhuang.testnet`. All of them's master key is: `jonhuang.testnet`.
 
 ## Deploy and Init Smart Contract
 ```bash
@@ -70,32 +70,36 @@ And AMM contract source code:
     pub fn new(owner_id: AccountId, a_contract_id: AccountId, b_contract_id: AccountId) -> Self {
         require!(!env::state_exists(), "The contract has been initialized");
 
-        let this = Self {
-            owner_id: owner_id.clone(),
-            ratio: 0,
-            a_ticker: A_TICKER,
-            a_contract_id,
-            a_contract_name: "".into(),
-            a_contract_decimals: 1,
-            b_ticker: B_TICKER,
-            b_contract_id,
-            b_contract_name: "".into(),
-            b_contract_decimals: 1,
-        };
         // The method requests and stores the metadata of tokens (name, decimals)
-        ext_token::ext(this.a_contract_id.clone()).get_info().then(
-            ext_self::ext(env::current_account_id()).callback_get_info(this.a_contract_id.clone()),
+        ext_token::ext(a_contract_id.clone()).get_info().then(
+            ext_self::ext(env::current_account_id()).callback_get_info(a_contract_id.clone()),
         );
-        ext_token::ext(this.b_contract_id.clone()).get_info().then(
-            ext_self::ext(env::current_account_id()).callback_get_info(this.b_contract_id.clone()),
+        ext_token::ext(b_contract_id.clone()).get_info().then(
+            ext_self::ext(env::current_account_id()).callback_get_info(b_contract_id.clone()),
         );
         // Creates wallets for tokens А & В.
-        ext_token::ext(this.a_contract_id.clone()).register_amm(owner_id.clone(), this.a_ticker);
-        ext_token::ext(this.b_contract_id.clone()).register_amm(owner_id, this.b_ticker);
-        this
+        ext_token::ext(a_contract_id.clone()).register_amm(owner_id.clone(), A_BALANCE);
+        ext_token::ext(b_contract_id.clone()).register_amm(owner_id.clone(), B_BALANCE);
+
+        Self {
+            owner_id,
+            ratio: 0,
+            a_balance: A_BALANCE,
+            a_meta: TokenMeta {
+                account_id: a_contract_id,
+                ticker: "".into(),
+                decimal: 1,
+            },
+            b_balance: B_BALANCE,
+            b_meta: TokenMeta {
+                account_id: b_contract_id,
+                ticker: "".into(),
+                decimal: 1,
+            },
+        }
     }
 ```
-From above code, we saw sth like `ext_token::ext(this.a_contract_id.clone()).get_info()` which is a cross contract calling method. The statement means we call the `get_info` method of A contract from current contract and return a `Promise`. Therefore it is a asynchronous calling. So the current process do not block to wait the calling result, it continues runing to the end. The code is very simple. For ordinary, we should check every situation for the synchronous result. 
+From above code, we saw sth like `ext_token::ext(a_contract_id.clone()).get_info()` which is a cross contract calling method. The statement means we call the `get_info` method of A contract from current contract and return a `Promise`. Therefore it is a asynchronous calling. So the current process do not block to wait the calling result, it continues runing to the end. The code is very simple. For ordinary, we should check every situation for the synchronous result. 
 
 ## Test AMM Functionality
 ```base
@@ -118,20 +122,19 @@ This is a core function of AMM contract. We send a `deposit_a` transaction to AM
     #[payable]
     pub fn deposit_a(&mut self, amount: Balance) {
         let sender_id = env::predecessor_account_id();
-        let decimal = 10_u128.pow(self.a_contract_decimals as u32);
+        let decimal = 10_u128.pow(self.a_meta.decimal);
         let a_amount = amount * decimal;
-        let a_ticker_after = a_amount + self.a_ticker;
-        let b_ticker_after = self.ratio
-            / (a_ticker_after / decimal)
-            * 10_u128.pow(self.b_contract_decimals as u32);
-        let b_amount = self.b_ticker - b_ticker_after;
-        let next_contract = self.b_contract_id.clone();
-        ext_token::ext(self.a_contract_id.clone())
+        let a_balance_after = a_amount + self.a_balance;
+        let b_balance_after =
+            self.ratio / (a_balance_after / decimal) * 10_u128.pow(self.b_meta.decimal);
+        let b_amount = self.b_balance - b_balance_after;
+        let next_contract = self.b_meta.account_id.clone();
+        ext_token::ext(self.a_meta.account_id.clone())
             .transfer_from(sender_id.clone(), env::current_account_id(), a_amount)
             .then(
                 ext_self::ext(env::current_account_id()).callback_ft_deposit(
-                    a_ticker_after,
-                    b_ticker_after,
+                    a_balance_after,
+                    b_balance_after,
                     next_contract,
                     sender_id,
                     b_amount,
