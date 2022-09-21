@@ -1,25 +1,29 @@
 ## Abstract
 This a NEAR Smart Contract case named hello-near. Please notice that it's not ready for production.In this case we will create three simple NEAR contracts: A fungible token contract, B fungible token contract and AMM like contract.
 
-The user can transfer a number of tokens A to the AMM contract and in return receive a certain number of tokens B (similarly in the other direction).The contract supports a certain ratio of tokens A and B. $X * Y = K$ ($K$ is some constant value, $X$ and $Y$ are the number of tokens A and B respectively)
+The user can transfer a number of tokens A to the AMM contract and in return receive a certain number of tokens B (similarly in the other direction).The contract supports a certain ratio of tokens A and B. $X * Y = K$ ( $K$ is some constant value, $X$ and $Y$ are the number of tokens A and B respectively)
 
 ## Create Accounts
-NEAR is very different from Ethereum. It use Account system instead of the public key. One can own multiple accounts.The Account is like domain thing. You can create a top account which called `Master Account`, and then create multiple subaccounts under it.Because each NEAR account can only hold 1 smart contract. So in order to organize multiple contracts we can create "subaccounts" whose "master account" is user account.
+NEAR implement an DID system with contract. Instead of using the public key as your identity, you can create an account in Near which is appropriate to your keys. One can own multiple accounts. The Account is like domain thing. You can create a top account which called `Master Account`, and then create multiple subaccounts under it.Because each NEAR account can only hold 1 smart contract. So in order to organize multiple contracts we can create "subaccounts" whose "master account" is user account.
 
 In this example we need four accounts say `jonhuang.testnet`, `a.jonhuang.testnet`, `b.jonhuang.testnet`, `z.jonhuang.testnet`. `jonhuang.testnet` is the Master Account which I use to create subaccounts, deploy contract, manage contract. `a.jonhuang.testnet`, `b.jonhuang.testnet` and `z.jonhuang.testnet` are for A fungible token contract, B fungible token contract, AMM contract.
 
 ```bash
 owner_id=jonhuang.testnet
-a_id=a.jonhuang.testnet
-b_id=b.jonhuang.testnet
-amm_id=z.jonhuang.testnet
+a_id=a.$owner_id
+b_id=b.$owner_id
+amm_id=amm.$owner_id
+sim_id=sim.$owner_id
 
-near login
-near create-account $a_id --masterAccount $owner_id
-near create-account $b_id --masterAccount $owner_id
-near create-account $amm_id --masterAccount $owner_id
+near="near --nodeUrl https://rpc.testnet.near.org"
+
+$near login
+$near create-account $a_id --masterAccount $owner_id
+$near create-account $b_id --masterAccount $owner_id
+$near create-account $amm_id --masterAccount $owner_id
+$near create-account $sim_id --masterAccount $owner_id
 ```
-We use NEAR CLI to create the accounts. First we need to login with `jonhuang.testnet`. `jonhuang.testnet` was created via NEAR wallet app https://wallet.testnet.near.org/. And then create three contract accounts `a.jonhuang.testnet`, `b.jonhuang.testnet` and `z.jonhuang.testnet`. All of them's master key is: `jonhuang.testnet`.
+We use NEAR CLI to create the accounts. First we need to login with `jonhuang.testnet`. `jonhuang.testnet` was created via NEAR wallet app https://wallet.testnet.near.org/. And then create three contract accounts `a.jonhuang.testnet`, `b.jonhuang.testnet` and `amm.jonhuang.testnet`. All of them's master key is: `jonhuang.testnet`.
 
 ## Deploy and Init Smart Contract
 ```bash
